@@ -353,6 +353,12 @@ function activeMotionPaths() {
     .filter((clip) => clip?.path?.length >= 2);
 }
 
+function ensureSelectedPart() {
+  if (partLabels[state.selectedPart]) return;
+  const selectedClip = selectedClipById(state.selectedPathId);
+  state.selectedPart = selectedClip?.part ?? activeMotionPaths()[0]?.part ?? "rightHand";
+}
+
 function intensityToBezier(intensity) {
   const clamped = clamp(intensity, 0, 1);
   return {
@@ -1650,6 +1656,8 @@ function setMode(mode) {
   state.mode = mode;
   state.isDrawing = false;
   state.isPlaying = false;
+  state.isPanningFrame = false;
+  ensureSelectedPart();
   if (mode !== "motion") {
     state.selectedPathId = null;
     state.hoveredPathId = null;
