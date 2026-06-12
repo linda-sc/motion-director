@@ -1420,6 +1420,8 @@ function renderMiniPose(pose, frameNumber) {
   const torso = miniPoint(pose.torso);
   const leftHip = miniPoint(pose.leftHip);
   const rightHip = miniPoint(pose.rightHip);
+  const contactPart = pose[state.selectedPart] ? state.selectedPart : activeMotionPaths()[0]?.part;
+  const contactPoint = contactPart ? miniPoint(pose[contactPart]) : null;
   return `
     <svg class="frame-preview" viewBox="0 0 88 68" aria-hidden="true" focusable="false">
       ${miniLine(pose, "leftHip", "rightHip", "mini-hip")}
@@ -1435,7 +1437,7 @@ function renderMiniPose(pose, frameNumber) {
       <line class="mini-spine" x1="${head.x.toFixed(1)}" y1="${(head.y + 6).toFixed(1)}" x2="${torso.x.toFixed(1)}" y2="${torso.y.toFixed(1)}" />
       <circle class="mini-head" cx="${head.x.toFixed(1)}" cy="${head.y.toFixed(1)}" r="5.2" />
       <circle class="mini-body" cx="${torso.x.toFixed(1)}" cy="${torso.y.toFixed(1)}" r="4.6" />
-      <circle class="mini-contact" cx="${miniPoint(pose[state.selectedPart]).x.toFixed(1)}" cy="${miniPoint(pose[state.selectedPart]).y.toFixed(1)}" r="3.2" />
+      ${contactPoint ? `<circle class="mini-contact" cx="${contactPoint.x.toFixed(1)}" cy="${contactPoint.y.toFixed(1)}" r="3.2" />` : ""}
     </svg>
     <span>${String(frameNumber).padStart(2, "0")}</span>
   `;
@@ -1953,7 +1955,6 @@ function play() {
     return;
   }
   state.isPlaying = true;
-  state.selectedPart = null;
   render();
   renderPlayButton();
   const start = performance.now();
