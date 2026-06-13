@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Polyman pose grid harness</title>
+<style>
+  :root { --stage:#f7fbff; --pose:#7c3aed; --red:#ef4444; --ink:#172033; --grid:#e3ecf7; --grid2:#bfd7f8; --lab:#5b6b82; }
+  body { margin:0; background:#fff; font-family: ui-sans-serif, system-ui, sans-serif; color:var(--ink); }
+  #root { display:flex; flex-wrap:wrap; align-items:flex-start; gap:10px; }
+  .pose-block { padding:8px 10px 14px; }
+  .pose-block h3 { margin:0 0 4px; font-size:17px; font-weight:500; }
+  .pose-block .meta { margin:0 0 6px; font-size:13px; color:var(--lab); max-width:760px; }
+  svg.stage { width:780px; max-width:100%; height:auto; background:var(--stage); border:1px solid #dbe7f5; border-radius:8px; display:block; }
+  .grid-label { font-size:13px; }
+  .grid-line { stroke:var(--grid); stroke-width:0.6; }
+  .grid-line.major { stroke:var(--grid2); stroke-width:0.9; }
+  .grid-label { fill:var(--lab); font-size:12px; }
+  .limb { fill: rgba(255,255,255,0.55); stroke-linejoin:round; stroke-width:2; }
+  .node { stroke:#fff; stroke-width:1; }
+  .node-label { font-size:10px; fill:var(--lab); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// ---- helpers (ported from app.js, shape=100, no polygon edits) ----
+const f = (n) => Number(n.toFixed(1));
+const distance = (a,b) => Math.max(1, Math.hypot(b.x-a.x, b.y-a.y));
+const unit = (a,b) => { const l=distance(a,b); return {x:(b.x-a.x)/l, y:(b.y-a.y)/l}; };
+const addScaled = (p,v,s) => ({x:p.x+v.x*s, y:p.y+v.y*s});
+const off = (p,x,y) => ({x:p.x+x, y:p.y+y});
+const mid = (a,b) => ({x:(a.x+b.x)/2, y:(a.y+b.y)/2});
+const ptsStr = (arr) => arr.map(p=>`${f(p.x)},${f(p.y)}`).join(" ");
+
+function limbPolygon(s,e,sw,ew){
+  const ax=unit(s,e), n={x:-ax.y,y:ax.x}, c=mid(s,e), hd=(sw+ew)/4;
+  return ptsStr([
+    addScaled(s,n,sw/2), addScaled(c,n,hd), addScaled(e,n,ew/2),
+    addScaled(e,n,-ew/2), addScaled(c,n,-hd), addScaled(s,n,-sw/2),
+  ]);
+}
+function torsoPoly(p){
+  const t = {
+    leftShoulder: off(p.leftShoulder,-13,-8), rightShoulder: off(p.rightShoulder,16,-8),
+    rightRib: off(p.chest,43,12), rightWaist: off(p.stomach,27,20), rightHip: off(p.rightHip,30,23),
+    pelvisTip: off(p.hips,0,54), leftHip: off(p.leftHip,-30,23), leftWaist: off(p.stomach,-27,20), leftRib: off(p.chest,-43,12),
+  };
+  return ptsStr([t.leftShoulder,t.rightShoulder,t.rightRib,t.rightWaist,t.rightHip,t.pelvisTip,t.leftHip,t.leftWaist,t.leftRib]);
+}
+function neckPoly(p){ return ptsStr([off(p.neck,-15,-4),off(p.neck,15,-4),off(p.neck,12,26),off(p.neck,-12,26)]); }
+function headPoly(h){ return ptsStr([off(h,-33,-48),off(h,30,-42),off(h,42,-5),off(h,6,47),off(h,-41,10)]); }
+function handPoly(el,h){
+  const ax=unit(el,h), n={x:-ax.y,y:ax.x};
+  return ptsStr([
+    addScaled(addScaled(h,ax,-12),n,10), addScaled(addScaled(h,ax,6),n,16),
+    addScaled(addScaled(h,ax,25),n,1), addScaled(addScaled(h,ax,6),n,-16), addScaled(addScaled(h,ax,-12),n,-11),
+  ]);
+}
+function footPoly(kn,ft,dir){
+  const ax=unit(kn,ft), n={x:-ax.y,y:ax.x};
+  const fwd=unit(ft,{x:ft.x+dir*48,y:ft.y+8}), toeBase=addScaled(ft,fwd,28), toeTip=addScaled(ft,fwd,43);
+  return ptsStr([
+    addScaled(addScaled(ft,ax,-14),n,11), addScaled(toeTip,n,5), addScaled(toeTip,n,-8),
+    addScaled(toeBase,n,-14), addScaled(addScaled(ft,ax,-18),n,-4),
+  ]);
+}
+// z-order from renderAnimePuppet
+function figurePolys(p){
+  return [
+    limbPolygon(p.leftShoulder,p.leftElbow,24,18), limbPolygon(p.leftElbow,p.leftHand,18,13),
+    limbPolygon(p.leftHip,p.leftKnee,28,21), limbPolygon(p.leftKnee,p.leftFoot,21,15),
+    limbPolygon(p.rightShoulder,p.rightElbow,25,18), limbPolygon(p.rightHip,p.rightKnee,29,21),
+    torsoPoly(p), neckPoly(p), headPoly(p.head),
+    limbPolygon(p.rightElbow,p.rightHand,18,13),
+    handPoly(p.leftElbow,p.leftHand), handPoly(p.rightElbow,p.rightHand),
+    limbPolygon(p.rightKnee,p.rightFoot,21,15),
+    footPoly(p.leftKnee,p.leftFoot,-1), footPoly(p.rightKnee,p.rightFoot,1),
+  ];
+}
+const NODES = ["head","neck","chest","stomach","hips","leftShoulder","rightShoulder","leftElbow","rightElbow","leftHand","rightHand","leftHip","rightHip","leftKnee","rightKnee","leftFoot","rightFoot"];
+const EDGES = [["head","neck"],["neck","chest"],["chest","stomach"],["stomach","hips"],["neck","leftShoulder"],["neck","rightShoulder"],["leftShoulder","leftElbow"],["leftElbow","leftHand"],["rightShoulder","rightElbow"],["rightElbow","rightHand"],["hips","leftHip"],["hips","rightHip"],["leftHip","leftKnee"],["leftKnee","leftFoot"],["rightHip","rightKnee"],["rightKnee","rightFoot"]];
+
+function gridSvg(W,H){
+  let g="";
+  for(let x=0;x<=W;x+=50){ const m=x%100===0; g+=`<line class="grid-line ${m?'major':''}" x1="${x}" y1="0" x2="${x}" y2="${H}"/>`; if(m) g+=`<text class="grid-label" x="${x+2}" y="14">${x}</text>`; }
+  for(let y=0;y<=H;y+=50){ const m=y%100===0; g+=`<line class="grid-line ${m?'major':''}" x1="0" y1="${y}" x2="${W}" y2="${y}"/>`; if(m && y>0) g+=`<text class="grid-label" x="3" y="${y-3}">${y}</text>`; }
+  return g;
+}
+function render(){
+  const W=900,H=720;
+  const root=document.getElementById("root");
+  root.innerHTML = POSES.map(({label,meta,color,pose})=>{
+    const polys = figurePolys(pose).map(pp=>`<polygon class="limb" points="${pp}" stroke="${color}"/>`).join("");
+    const bones = EDGES.map(([a,b])=>pose[a]&&pose[b]?`<line x1="${pose[a].x}" y1="${pose[a].y}" x2="${pose[b].x}" y2="${pose[b].y}" stroke="#334155" stroke-width="1.6" stroke-linecap="round"/>`:"").join("");
+    const dots = NODES.map(k=>pose[k]?`<circle class="node" cx="${pose[k].x}" cy="${pose[k].y}" r="4" fill="#334155"/>`:"").join("");
+    return `<div class="pose-block"><h3>${label}</h3><p class="meta">${meta||""}</p>
+      <svg class="stage" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+        ${gridSvg(W,H)}${polys}${bones}${dots}
+      </svg></div>`;
+  }).join("");
+}
+
+// ============ POSES (edit these between iterations) ============
+const BASE = {
+  head:{x:450,y:156}, neck:{x:450,y:214}, chest:{x:450,y:256}, stomach:{x:450,y:326}, hips:{x:450,y:398},
+  leftShoulder:{x:394,y:238}, rightShoulder:{x:506,y:238},
+  leftElbow:{x:414,y:324}, rightElbow:{x:548,y:324},
+  leftHand:{x:387,y:393}, rightHand:{x:508,y:393},
+  leftHip:{x:416,y:398}, rightHip:{x:484,y:398},
+  leftKnee:{x:386,y:536}, rightKnee:{x:522,y:532},
+  leftFoot:{x:360,y:672}, rightFoot:{x:548,y:668},
+};
+const SHOCK = {
+  head:{x:430,y:70}, neck:{x:440,y:128}, chest:{x:446,y:170}, stomach:{x:452,y:238}, hips:{x:458,y:308},
+  leftShoulder:{x:396,y:130}, rightShoulder:{x:502,y:156},
+  leftElbow:{x:362,y:78}, rightElbow:{x:556,y:230},
+  leftHand:{x:336,y:30}, rightHand:{x:600,y:300},
+  leftHip:{x:426,y:308}, rightHip:{x:494,y:308},
+  leftKnee:{x:416,y:392}, rightKnee:{x:512,y:430},
+  leftFoot:{x:444,y:436}, rightFoot:{x:530,y:540},
+};
+const POSES = [
+  { label:"shock apex · asymmetric v1", meta:"left arm flung up/out, right arm pulled across, uneven leg tuck, head tilted away", color:"#ef4444", pose:SHOCK },
+  { label:"base · default Polyman", meta:"fidelity check — should match the app's rest pose", color:"#7c3aed", pose:BASE },
+];
+render();
+</script>
+</body>
+</html>
