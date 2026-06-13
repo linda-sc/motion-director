@@ -20,7 +20,7 @@ intent — poses, arcs, timing — not rigged sprites. Built at a hackathon; now
   `restoreSnapshot`). That's how a generated clip gets into the app.
 
 ## The generation + checking loop (core orchestration)
-Claude acts as a junior animator; the human owns taste, the machine owns coherence:
+Codex acts as a junior animator; the human owns taste, the machine owns coherence:
 1. **Generate** a keyframe pose (or 2–3) as structured JSON conforming to the `.motion.json` schema.
 2. **Render** it on the verifier fixture `tools/pose-grid.html` — a labelled coordinate grid
    showing the **skeleton + joint dots** (the JSON truth) overlaid on the **actual Polyman**

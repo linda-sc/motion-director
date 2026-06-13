@@ -1,0 +1,759 @@
+{
+  "version": 1,
+  "app": "motion-director",
+  "name": "Anxious jump",
+  "savedAt": "2026-06-13T00:00:00.000Z",
+  "snapshot": {
+    "mode": "motion",
+    "character": "animeHuman",
+    "customBaseName": null,
+    "selectedPart": null,
+    "base": {
+      "head": {
+        "x": 450.0,
+        "y": 156.0
+      },
+      "neck": {
+        "x": 450.0,
+        "y": 214.0
+      },
+      "chest": {
+        "x": 450.0,
+        "y": 256.0
+      },
+      "stomach": {
+        "x": 450.0,
+        "y": 326.0
+      },
+      "hips": {
+        "x": 450.0,
+        "y": 398.0
+      },
+      "leftShoulder": {
+        "x": 394.0,
+        "y": 238.0
+      },
+      "rightShoulder": {
+        "x": 506.0,
+        "y": 238.0
+      },
+      "leftElbow": {
+        "x": 414.0,
+        "y": 324.0
+      },
+      "rightElbow": {
+        "x": 548.0,
+        "y": 324.0
+      },
+      "leftHand": {
+        "x": 387.0,
+        "y": 393.0
+      },
+      "rightHand": {
+        "x": 508.0,
+        "y": 393.0
+      },
+      "leftHip": {
+        "x": 416.0,
+        "y": 398.0
+      },
+      "rightHip": {
+        "x": 484.0,
+        "y": 398.0
+      },
+      "leftKnee": {
+        "x": 386.0,
+        "y": 536.0
+      },
+      "rightKnee": {
+        "x": 522.0,
+        "y": 532.0
+      },
+      "leftFoot": {
+        "x": 360.0,
+        "y": 672.0
+      },
+      "rightFoot": {
+        "x": 548.0,
+        "y": 668.0
+      }
+    },
+    "pose": {
+      "head": {
+        "x": 450.0,
+        "y": 156.0
+      },
+      "neck": {
+        "x": 450.0,
+        "y": 214.0
+      },
+      "chest": {
+        "x": 450.0,
+        "y": 256.0
+      },
+      "stomach": {
+        "x": 450.0,
+        "y": 326.0
+      },
+      "hips": {
+        "x": 450.0,
+        "y": 398.0
+      },
+      "leftShoulder": {
+        "x": 394.0,
+        "y": 238.0
+      },
+      "rightShoulder": {
+        "x": 506.0,
+        "y": 238.0
+      },
+      "leftElbow": {
+        "x": 414.0,
+        "y": 324.0
+      },
+      "rightElbow": {
+        "x": 548.0,
+        "y": 324.0
+      },
+      "leftHand": {
+        "x": 387.0,
+        "y": 393.0
+      },
+      "rightHand": {
+        "x": 508.0,
+        "y": 393.0
+      },
+      "leftHip": {
+        "x": 416.0,
+        "y": 398.0
+      },
+      "rightHip": {
+        "x": 484.0,
+        "y": 398.0
+      },
+      "leftKnee": {
+        "x": 386.0,
+        "y": 536.0
+      },
+      "rightKnee": {
+        "x": 522.0,
+        "y": 532.0
+      },
+      "leftFoot": {
+        "x": 360.0,
+        "y": 672.0
+      },
+      "rightFoot": {
+        "x": 548.0,
+        "y": 668.0
+      }
+    },
+    "easingBezier": {
+      "x1": 0.22,
+      "y1": 0.02,
+      "x2": 0.18,
+      "y2": 1
+    },
+    "anticipationTime": 0.18,
+    "overshootTime": 0.18,
+    "duration": 3775,
+    "selectedAnchorIndex": 0,
+    "frameRate": 12,
+    "currentFrame": 0,
+    "playbackLoop": true,
+    "playbackPingPong": false,
+    "keyframes": {
+      "0": {
+        "pose": {
+          "head": {
+            "x": 450.0,
+            "y": 156.0
+          },
+          "neck": {
+            "x": 450.0,
+            "y": 214.0
+          },
+          "chest": {
+            "x": 450.0,
+            "y": 256.0
+          },
+          "stomach": {
+            "x": 450.0,
+            "y": 326.0
+          },
+          "hips": {
+            "x": 450.0,
+            "y": 398.0
+          },
+          "leftShoulder": {
+            "x": 394.0,
+            "y": 238.0
+          },
+          "rightShoulder": {
+            "x": 506.0,
+            "y": 238.0
+          },
+          "leftElbow": {
+            "x": 414.0,
+            "y": 324.0
+          },
+          "rightElbow": {
+            "x": 548.0,
+            "y": 324.0
+          },
+          "leftHand": {
+            "x": 387.0,
+            "y": 393.0
+          },
+          "rightHand": {
+            "x": 508.0,
+            "y": 393.0
+          },
+          "leftHip": {
+            "x": 416.0,
+            "y": 398.0
+          },
+          "rightHip": {
+            "x": 484.0,
+            "y": 398.0
+          },
+          "leftKnee": {
+            "x": 386.0,
+            "y": 536.0
+          },
+          "rightKnee": {
+            "x": 522.0,
+            "y": 532.0
+          },
+          "leftFoot": {
+            "x": 360.0,
+            "y": 672.0
+          },
+          "rightFoot": {
+            "x": 548.0,
+            "y": 668.0
+          }
+        },
+        "durationMs": 750,
+        "holdMs": 250,
+        "motion": {
+          "easingBezier": {
+            "x1": 0.22,
+            "y1": 0.02,
+            "x2": 0.18,
+            "y2": 1
+          },
+          "anticipationTime": 0.18,
+          "overshootTime": 0.18
+        }
+      },
+      "1": {
+        "pose": {
+          "head": {
+            "x": 452.0,
+            "y": 184.0
+          },
+          "neck": {
+            "x": 450.0,
+            "y": 240.0
+          },
+          "chest": {
+            "x": 450.0,
+            "y": 284.0
+          },
+          "stomach": {
+            "x": 452.0,
+            "y": 352.0
+          },
+          "hips": {
+            "x": 450.0,
+            "y": 428.0
+          },
+          "leftShoulder": {
+            "x": 394.0,
+            "y": 268.0
+          },
+          "rightShoulder": {
+            "x": 506.0,
+            "y": 268.0
+          },
+          "leftElbow": {
+            "x": 410.0,
+            "y": 352.0
+          },
+          "rightElbow": {
+            "x": 552.0,
+            "y": 352.0
+          },
+          "leftHand": {
+            "x": 384.0,
+            "y": 420.0
+          },
+          "rightHand": {
+            "x": 512.0,
+            "y": 420.0
+          },
+          "leftHip": {
+            "x": 416.0,
+            "y": 428.0
+          },
+          "rightHip": {
+            "x": 484.0,
+            "y": 428.0
+          },
+          "leftKnee": {
+            "x": 384.0,
+            "y": 548.0
+          },
+          "rightKnee": {
+            "x": 524.0,
+            "y": 544.0
+          },
+          "leftFoot": {
+            "x": 360.0,
+            "y": 672.0
+          },
+          "rightFoot": {
+            "x": 548.0,
+            "y": 668.0
+          }
+        },
+        "durationMs": 415,
+        "holdMs": 165,
+        "motion": {
+          "easingBezier": {
+            "x1": 0.22,
+            "y1": 0.02,
+            "x2": 0.18,
+            "y2": 1
+          },
+          "anticipationTime": 0.18,
+          "overshootTime": 0.18
+        }
+      },
+      "2": {
+        "pose": {
+          "head": {
+            "x": 438.0,
+            "y": 118.0
+          },
+          "neck": {
+            "x": 444.0,
+            "y": 176.0
+          },
+          "chest": {
+            "x": 448.0,
+            "y": 220.0
+          },
+          "stomach": {
+            "x": 452.0,
+            "y": 290.0
+          },
+          "hips": {
+            "x": 454.0,
+            "y": 360.0
+          },
+          "leftShoulder": {
+            "x": 396.0,
+            "y": 184.0
+          },
+          "rightShoulder": {
+            "x": 504.0,
+            "y": 196.0
+          },
+          "leftElbow": {
+            "x": 380.0,
+            "y": 150.0
+          },
+          "rightElbow": {
+            "x": 540.0,
+            "y": 250.0
+          },
+          "leftHand": {
+            "x": 350.0,
+            "y": 96.0
+          },
+          "rightHand": {
+            "x": 580.0,
+            "y": 300.0
+          },
+          "leftHip": {
+            "x": 424.0,
+            "y": 360.0
+          },
+          "rightHip": {
+            "x": 488.0,
+            "y": 360.0
+          },
+          "leftKnee": {
+            "x": 410.0,
+            "y": 470.0
+          },
+          "rightKnee": {
+            "x": 510.0,
+            "y": 475.0
+          },
+          "leftFoot": {
+            "x": 392.0,
+            "y": 560.0
+          },
+          "rightFoot": {
+            "x": 540.0,
+            "y": 575.0
+          }
+        },
+        "durationMs": 420,
+        "holdMs": 85,
+        "motion": {
+          "easingBezier": {
+            "x1": 0.22,
+            "y1": 0.02,
+            "x2": 0.18,
+            "y2": 1
+          },
+          "anticipationTime": 0.18,
+          "overshootTime": 0.18
+        }
+      },
+      "3": {
+        "pose": {
+          "head": {
+            "x": 430.0,
+            "y": 70.0
+          },
+          "neck": {
+            "x": 440.0,
+            "y": 128.0
+          },
+          "chest": {
+            "x": 446.0,
+            "y": 170.0
+          },
+          "stomach": {
+            "x": 452.0,
+            "y": 238.0
+          },
+          "hips": {
+            "x": 458.0,
+            "y": 308.0
+          },
+          "leftShoulder": {
+            "x": 396.0,
+            "y": 130.0
+          },
+          "rightShoulder": {
+            "x": 502.0,
+            "y": 156.0
+          },
+          "leftElbow": {
+            "x": 362.0,
+            "y": 78.0
+          },
+          "rightElbow": {
+            "x": 556.0,
+            "y": 230.0
+          },
+          "leftHand": {
+            "x": 336.0,
+            "y": 30.0
+          },
+          "rightHand": {
+            "x": 600.0,
+            "y": 300.0
+          },
+          "leftHip": {
+            "x": 426.0,
+            "y": 308.0
+          },
+          "rightHip": {
+            "x": 494.0,
+            "y": 308.0
+          },
+          "leftKnee": {
+            "x": 416.0,
+            "y": 392.0
+          },
+          "rightKnee": {
+            "x": 512.0,
+            "y": 430.0
+          },
+          "leftFoot": {
+            "x": 444.0,
+            "y": 436.0
+          },
+          "rightFoot": {
+            "x": 530.0,
+            "y": 540.0
+          }
+        },
+        "durationMs": 755,
+        "holdMs": 420,
+        "motion": {
+          "easingBezier": {
+            "x1": 0.22,
+            "y1": 0.02,
+            "x2": 0.18,
+            "y2": 1
+          },
+          "anticipationTime": 0.18,
+          "overshootTime": 0.18
+        }
+      },
+      "4": {
+        "pose": {
+          "head": {
+            "x": 438.0,
+            "y": 120.0
+          },
+          "neck": {
+            "x": 444.0,
+            "y": 176.0
+          },
+          "chest": {
+            "x": 448.0,
+            "y": 218.0
+          },
+          "stomach": {
+            "x": 452.0,
+            "y": 288.0
+          },
+          "hips": {
+            "x": 456.0,
+            "y": 360.0
+          },
+          "leftShoulder": {
+            "x": 398.0,
+            "y": 180.0
+          },
+          "rightShoulder": {
+            "x": 502.0,
+            "y": 200.0
+          },
+          "leftElbow": {
+            "x": 378.0,
+            "y": 150.0
+          },
+          "rightElbow": {
+            "x": 548.0,
+            "y": 270.0
+          },
+          "leftHand": {
+            "x": 360.0,
+            "y": 110.0
+          },
+          "rightHand": {
+            "x": 584.0,
+            "y": 330.0
+          },
+          "leftHip": {
+            "x": 426.0,
+            "y": 360.0
+          },
+          "rightHip": {
+            "x": 490.0,
+            "y": 360.0
+          },
+          "leftKnee": {
+            "x": 414.0,
+            "y": 470.0
+          },
+          "rightKnee": {
+            "x": 510.0,
+            "y": 475.0
+          },
+          "leftFoot": {
+            "x": 430.0,
+            "y": 560.0
+          },
+          "rightFoot": {
+            "x": 528.0,
+            "y": 575.0
+          }
+        },
+        "durationMs": 335,
+        "holdMs": 85,
+        "motion": {
+          "easingBezier": {
+            "x1": 0.22,
+            "y1": 0.02,
+            "x2": 0.18,
+            "y2": 1
+          },
+          "anticipationTime": 0.18,
+          "overshootTime": 0.18
+        }
+      },
+      "5": {
+        "pose": {
+          "head": {
+            "x": 466.0,
+            "y": 186.0
+          },
+          "neck": {
+            "x": 456.0,
+            "y": 236.0
+          },
+          "chest": {
+            "x": 454.0,
+            "y": 278.0
+          },
+          "stomach": {
+            "x": 452.0,
+            "y": 346.0
+          },
+          "hips": {
+            "x": 452.0,
+            "y": 420.0
+          },
+          "leftShoulder": {
+            "x": 402.0,
+            "y": 250.0
+          },
+          "rightShoulder": {
+            "x": 512.0,
+            "y": 252.0
+          },
+          "leftElbow": {
+            "x": 408.0,
+            "y": 332.0
+          },
+          "rightElbow": {
+            "x": 540.0,
+            "y": 332.0
+          },
+          "leftHand": {
+            "x": 416.0,
+            "y": 392.0
+          },
+          "rightHand": {
+            "x": 520.0,
+            "y": 392.0
+          },
+          "leftHip": {
+            "x": 416.0,
+            "y": 420.0
+          },
+          "rightHip": {
+            "x": 488.0,
+            "y": 420.0
+          },
+          "leftKnee": {
+            "x": 380.0,
+            "y": 556.0
+          },
+          "rightKnee": {
+            "x": 528.0,
+            "y": 552.0
+          },
+          "leftFoot": {
+            "x": 352.0,
+            "y": 672.0
+          },
+          "rightFoot": {
+            "x": 556.0,
+            "y": 668.0
+          }
+        },
+        "durationMs": 580,
+        "holdMs": 165,
+        "motion": {
+          "easingBezier": {
+            "x1": 0.22,
+            "y1": 0.02,
+            "x2": 0.18,
+            "y2": 1
+          },
+          "anticipationTime": 0.18,
+          "overshootTime": 0.18
+        }
+      },
+      "6": {
+        "pose": {
+          "head": {
+            "x": 460.0,
+            "y": 180.0
+          },
+          "neck": {
+            "x": 452.0,
+            "y": 228.0
+          },
+          "chest": {
+            "x": 452.0,
+            "y": 270.0
+          },
+          "stomach": {
+            "x": 450.0,
+            "y": 338.0
+          },
+          "hips": {
+            "x": 450.0,
+            "y": 408.0
+          },
+          "leftShoulder": {
+            "x": 400.0,
+            "y": 248.0
+          },
+          "rightShoulder": {
+            "x": 510.0,
+            "y": 248.0
+          },
+          "leftElbow": {
+            "x": 412.0,
+            "y": 330.0
+          },
+          "rightElbow": {
+            "x": 538.0,
+            "y": 332.0
+          },
+          "leftHand": {
+            "x": 432.0,
+            "y": 288.0
+          },
+          "rightHand": {
+            "x": 516.0,
+            "y": 360.0
+          },
+          "leftHip": {
+            "x": 416.0,
+            "y": 408.0
+          },
+          "rightHip": {
+            "x": 484.0,
+            "y": 408.0
+          },
+          "leftKnee": {
+            "x": 384.0,
+            "y": 548.0
+          },
+          "rightKnee": {
+            "x": 524.0,
+            "y": 544.0
+          },
+          "leftFoot": {
+            "x": 356.0,
+            "y": 672.0
+          },
+          "rightFoot": {
+            "x": 552.0,
+            "y": 668.0
+          }
+        },
+        "durationMs": 520,
+        "holdMs": 520,
+        "motion": {
+          "easingBezier": {
+            "x1": 0.22,
+            "y1": 0.02,
+            "x2": 0.18,
+            "y2": 1
+          },
+          "anticipationTime": 0.18,
+          "overshootTime": 0.18
+        }
+      }
+    },
+    "motionPaths": {},
+    "activePathIdByPart": {},
+    "suppressedGeneratedMotionPaths": {}
+  }
+}

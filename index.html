@@ -97,6 +97,16 @@
         </section>
       </aside>
 
+      <div
+        class="side-panel-resizer"
+        id="sidePanelResizer"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize panel"
+        tabindex="0"
+        title="Drag to resize (double-click to reset)"
+      ></div>
+
       <section class="stage-wrap">
         <div class="stage-toolbar">
           <span id="selectedLabel">Selected: right hand</span>
@@ -173,6 +183,50 @@
             <g id="shotCropMarks" class="shot-crop-marks" aria-hidden="true"></g>
             <line id="motionGuideLine" class="motion-guide-line" x1="0" y1="0" x2="0" y2="0" />
           </svg>
+          <div class="ideate-dock" id="ideateDock">
+            <div class="ideate-popover" id="ideatePopover" role="dialog" aria-label="Describe an idea" hidden>
+              <div class="ideate-head">
+                <span class="ideate-spark" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M9.5 17.5h5" />
+                    <path d="M10.2 20.5h3.6" />
+                    <path d="M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.2 1.2 2l.1 1.2h4.6l.1-1.2c.1-.8.5-1.5 1.2-2A6 6 0 0 0 12 3z" />
+                  </svg>
+                </span>
+                <span class="ideate-title">Describe an idea</span>
+              </div>
+              <textarea
+                id="ideateInput"
+                class="ideate-input"
+                rows="3"
+                placeholder="e.g. a nervous little hop before the big jump…"
+              ></textarea>
+              <div class="ideate-actions">
+                <span class="ideate-hint"><kbd>⌘</kbd><kbd>↵</kbd> to send</span>
+                <button id="ideateSubmit" type="button" class="ideate-submit">
+                  <svg class="ideate-submit-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M12 3.5 13.7 9l5.3 1.7-5.3 1.7L12 18l-1.7-5.6L5 10.7 10.3 9 12 3.5z" />
+                  </svg>
+                  Suggest sketch
+                </button>
+              </div>
+            </div>
+            <button
+              id="ideateToggle"
+              type="button"
+              class="ideate-fab"
+              aria-expanded="false"
+              aria-label="Suggest a sketch"
+              title="Suggest a sketch"
+            >
+              <span class="ideate-fab-glow" aria-hidden="true"></span>
+              <svg class="ideate-fab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M9.5 17.5h5" />
+                <path d="M10.2 20.5h3.6" />
+                <path d="M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.2 1.2 2l.1 1.2h4.6l.1-1.2c.1-.8.5-1.5 1.2-2A6 6 0 0 0 12 3z" />
+              </svg>
+            </button>
+          </div>
         </div>
         <div class="timeline-panel">
           <div class="timeline-header">

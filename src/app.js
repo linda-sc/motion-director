@@ -7,6 +7,7 @@ const cameraZoomMax = 1.4;
 const cameraZoomDefault = 0.7;
 const legacyCameraZoomDefault = 0.9;
 const keyframeDurationMaxMs = 8000;
+const defaultKeyframeSpanMs = 1100;
 
 const partLabels = {
   head: "Head",
@@ -319,6 +320,13 @@ const rigidResponseArcGroups = [
 
 const stage = document.querySelector("#stage");
 const stageBg = document.querySelector(".stage-bg");
+const appShell = document.querySelector(".app-shell");
+const sidePanelResizer = document.querySelector("#sidePanelResizer");
+const ideateDock = document.querySelector("#ideateDock");
+const ideateToggle = document.querySelector("#ideateToggle");
+const ideatePopover = document.querySelector("#ideatePopover");
+const ideateInput = document.querySelector("#ideateInput");
+const ideateSubmit = document.querySelector("#ideateSubmit");
 const fileMenu = document.querySelector("#fileMenu");
 const openSaveAnimationModalButton = document.querySelector("#openSaveAnimationModalButton");
 const openLoadAnimationModalButton = document.querySelector("#openLoadAnimationModalButton");
@@ -1487,6 +1495,15 @@ function addAnchorKeyframe() {
   const previousPose = previousAnchor ? incomingPoseForAnchor(previousAnchor, timeline) : state.pose;
   const basePose = normalizeTorsoNodes(structuredClone(previousPose ?? state.base));
   recordHistory();
+  // The keyframe that will now precede the new one owns the span between them.
+  // If that span is zero (e.g. it was itself just appended), give it a default
+  // duration so the new keyframe has in-between frames to backfill once reposed.
+  if (anchors.length) {
+    const precedingAnchor = anchors[anchors.length - 1];
+    if (anchorDurationsFrames(precedingAnchor.durationMs) <= 0) {
+      precedingAnchor.durationMs = defaultKeyframeSpanMs;
+    }
+  }
   anchors.push({
     anchorIndex: nextIndex,
     pose: basePose,
@@ -2138,8 +2155,37 @@ function distance(a, b) {
   return Math.hypot(b.x - a.x, b.y - a.y);
 }
 
-function pointAlong(points, t) {
-  if (points.length < 2) return points[0] ?? state.pose[state.selectedPart];
+function quadPoint(start, control, end, u) {
+  const inv = 1 - u;
+  return {
+    x: inv * inv * start.x + 2 * inv * u * control.x + u * u * end.x,
+    y: inv * inv * start.y + 2 * inv * u * control.y + u * u * end.y,
+  };
+}
+
+// Densify a coarse polyline into the same quadratic-through-midpoints curve that
+// smoothPathData() draws for the overlay. Without this, motion samples straight
+// chords between vertices — so the 3-point auto connectors ([start, mid, end])
+// read as hard corners, and chained segments look like zigzags. Endpoints are
+// preserved exactly so the motion still lands on each keyframe pose.
+function curveSamplePoints(points, subdivisions = 14) {
+  if (!Array.isArray(points) || points.length < 3) return points;
+  const dense = [points[0]];
+  for (let i = 1; i < points.length - 1; i += 1) {
+    const control = points[i];
+    const segStart = i === 1 ? points[0] : midpoint(points[i - 1], points[i]);
+    const segEnd = midpoint(points[i], points[i + 1]);
+    for (let s = 1; s <= subdivisions; s += 1) {
+      dense.push(quadPoint(segStart, control, segEnd, s / subdivisions));
+    }
+  }
+  dense.push(points[points.length - 1]);
+  return dense;
+}
+
+function pointAlong(rawPoints, t) {
+  if (rawPoints.length < 2) return rawPoints[0] ?? state.pose[state.selectedPart];
+  const points = curveSamplePoints(rawPoints);
   const segments = [];
   let total = 0;
   for (let i = 1; i < points.length; i += 1) {
@@ -3211,7 +3257,8 @@ function poseForFrame(frameIndex) {
   const timeline = buildAnchorTimeline();
   const segment = anchorSegmentForFrame(frameIndex, timeline);
   const anchor = timeline.anchors.find((entry) => entry.anchorIndex === segment.anchorIndex);
-  let pose = resolveAnchorPose(anchor, timeline);
+  const startPose = resolveAnchorPose(anchor, timeline);
+  let pose = startPose;
   if (frameIsInsideSegmentHold(frameIndex, segment, timeline)) {
     return pose;
   }
@@ -3222,6 +3269,27 @@ function poseForFrame(frameIndex) {
     if (clipProgress === null) return;
     pose = connectedPose(clip.part, pointAlong(clip.path, pathProgressForTime(clipProgress, motionSettingsForClip(clip, timeline))), pose, { lockedParts });
   });
+  // Layered backfill: tween any node the arcs did not move from this segment's
+  // start pose toward the next anchor's pose. Arcs (and the chains they solve)
+  // win; this fills the remaining static nodes so a reposed keyframe produces
+  // smooth in-betweens without requiring a hand-drawn or generated arc per node.
+  const nextAnchor = timeline.anchors[segment.segmentIndex + 1];
+  if (nextAnchor) {
+    const endPose = resolveAnchorPose(nextAnchor, timeline);
+    const holdEnd = segmentHoldEndFrame(segment, timeline);
+    const span = segment.endFrame - holdEnd;
+    if (span > 0) {
+      const linearT = clamp((frameIndex - holdEnd) / span, 0, 1);
+      const easedT = clamp(pathProgressForTime(linearT, motionSettingsForSegment(segment, timeline)), 0, 1);
+      Object.keys(startPose).forEach((node) => {
+        const start = startPose[node];
+        const end = endPose[node];
+        if (!start || !end) return;
+        if (pose[node] && distance(start, pose[node]) > 0.001) return; // already moved by an arc
+        pose[node] = interpolatePoint(start, end, easedT);
+      });
+    }
+  }
   return pose;
 }
 
@@ -5075,14 +5143,157 @@ clearMotionButton.addEventListener("click", () => {
   saveState();
 });
 
+function isIdeateOpen() {
+  return ideatePopover && !ideatePopover.hidden;
+}
+
+function setIdeateOpen(open) {
+  if (!ideatePopover || !ideateToggle) return;
+  ideatePopover.hidden = !open;
+  ideateToggle.setAttribute("aria-expanded", String(open));
+  if (open) ideateInput?.focus();
+}
+
+// AI hook: this is where the prompt gets wired up to the model. For now it just
+// surfaces the idea text; replace the body with the real ideate call.
+function runIdeate(idea) {
+  const text = idea.trim();
+  if (!text) {
+    ideateInput?.focus();
+    return;
+  }
+  console.log("[ideate] prompt:", text);
+}
+
+if (ideateToggle && ideatePopover) {
+  ideateToggle.addEventListener("click", () => setIdeateOpen(!isIdeateOpen()));
+
+  ideateSubmit?.addEventListener("click", () => runIdeate(ideateInput?.value ?? ""));
+
+  ideateInput?.addEventListener("keydown", (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+      event.preventDefault();
+      runIdeate(ideateInput.value);
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && isIdeateOpen()) {
+      setIdeateOpen(false);
+      ideateToggle.focus();
+    }
+  });
+
+  document.addEventListener("pointerdown", (event) => {
+    if (isIdeateOpen() && !ideateDock?.contains(event.target)) setIdeateOpen(false);
+  });
+}
+
+const SIDE_PANEL_MIN = 200;
+const SIDE_PANEL_MAX = 520;
+const SIDE_PANEL_DEFAULT = 360;
+const SIDE_PANEL_STORAGE_KEY = "motiondirector.sidePanelWidth";
+
+function clampSidePanelWidth(width) {
+  return Math.round(Math.min(SIDE_PANEL_MAX, Math.max(SIDE_PANEL_MIN, width)));
+}
+
+function setSidePanelWidth(width, { persist = true } = {}) {
+  if (!appShell) return;
+  const clamped = clampSidePanelWidth(width);
+  appShell.style.setProperty("--side-width", `${clamped}px`);
+  if (persist) {
+    try {
+      localStorage.setItem(SIDE_PANEL_STORAGE_KEY, String(clamped));
+    } catch {
+      // ignore storage failures (private mode, etc.)
+    }
+  }
+}
+
+function loadSidePanelWidth() {
+  let stored = null;
+  try {
+    stored = localStorage.getItem(SIDE_PANEL_STORAGE_KEY);
+  } catch {
+    stored = null;
+  }
+  const width = stored == null ? SIDE_PANEL_DEFAULT : Number(stored);
+  setSidePanelWidth(Number.isFinite(width) ? width : SIDE_PANEL_DEFAULT, { persist: false });
+}
+
+if (sidePanelResizer && appShell) {
+  let resizePointerId = null;
+
+  const onResizeMove = (event) => {
+    if (event.pointerId !== resizePointerId) return;
+    setSidePanelWidth(event.clientX - appShell.getBoundingClientRect().left, { persist: false });
+    renderTimeline();
+    renderCamera();
+    renderMotionGuideLine();
+  };
+
+  const endResize = (event) => {
+    if (resizePointerId == null || event.pointerId !== resizePointerId) return;
+    sidePanelResizer.releasePointerCapture?.(resizePointerId);
+    resizePointerId = null;
+    sidePanelResizer.classList.remove("is-dragging");
+    document.body.classList.remove("is-resizing-side");
+    const current = parseFloat(getComputedStyle(appShell).getPropertyValue("--side-width"));
+    if (Number.isFinite(current)) setSidePanelWidth(current);
+  };
+
+  sidePanelResizer.addEventListener("pointerdown", (event) => {
+    resizePointerId = event.pointerId;
+    sidePanelResizer.setPointerCapture?.(event.pointerId);
+    sidePanelResizer.classList.add("is-dragging");
+    document.body.classList.add("is-resizing-side");
+    event.preventDefault();
+  });
+  sidePanelResizer.addEventListener("pointermove", onResizeMove);
+  sidePanelResizer.addEventListener("pointerup", endResize);
+  sidePanelResizer.addEventListener("pointercancel", endResize);
+
+  sidePanelResizer.addEventListener("dblclick", () => {
+    setSidePanelWidth(SIDE_PANEL_DEFAULT);
+    renderTimeline();
+    renderCamera();
+    renderMotionGuideLine();
+  });
+
+  sidePanelResizer.addEventListener("keydown", (event) => {
+    const step = event.shiftKey ? 32 : 12;
+    const current = parseFloat(getComputedStyle(appShell).getPropertyValue("--side-width")) || SIDE_PANEL_DEFAULT;
+    if (event.key === "ArrowLeft") {
+      setSidePanelWidth(current - step);
+    } else if (event.key === "ArrowRight") {
+      setSidePanelWidth(current + step);
+    } else {
+      return;
+    }
+    event.preventDefault();
+    renderTimeline();
+    renderCamera();
+    renderMotionGuideLine();
+  });
+}
+
 window.addEventListener("resize", () => {
   renderTimeline();
   renderCamera();
   renderMotionGuideLine();
 });
 
+loadSidePanelWidth();
 loadSavedState();
 syncFrameCount();
 syncControls();
 state.pose = poseForFrame(state.currentFrame);
 render();
+
+// TEMP-DEBUG: verification hook for the auto-interpolation check. REMOVE before commit.
+window.__md = { state, poseForFrame, buildAnchorTimeline, resolveAnchorPose,
+  incomingPoseForAnchor, poseDistanceAcrossNodes, activeMotionPathsForSegment, defaultBase,
+  pathProgressForTime, timingBounds, phaseDurations, pointAlong, clipProgressForFrame,
+  motionSettingsForSegment, motionSettingsForClip, clipMotionTimingWindow,
+  anchorSegmentForFrame, segmentHoldEndFrame, frameIsInsideSegmentHold };

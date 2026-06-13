@@ -55,10 +55,55 @@ pre {
 }
 
 .app-shell {
+  --side-width: 360px;
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+  grid-template-columns: var(--side-width) minmax(0, 1fr);
   min-height: 0;
   overflow: hidden;
+}
+
+.side-panel-resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--side-width);
+  width: 11px;
+  transform: translateX(-6px);
+  z-index: 15;
+  cursor: col-resize;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  touch-action: none;
+}
+
+.side-panel-resizer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-0.5px);
+  background: transparent;
+  transition: background 0.12s ease, width 0.12s ease;
+}
+
+.side-panel-resizer:hover::before,
+.side-panel-resizer:focus-visible::before,
+.side-panel-resizer.is-dragging::before {
+  width: 3px;
+  background: var(--accent);
+}
+
+.side-panel-resizer:focus-visible {
+  outline: none;
+}
+
+body.is-resizing-side {
+  cursor: col-resize;
+  user-select: none;
 }
 
 .file-bar {
@@ -1550,6 +1595,275 @@ pre {
   transform: rotate(180deg);
 }
 
+.ideate-dock {
+  --idea: #f5a623;
+  --idea-deep: #d6850c;
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+  pointer-events: none;
+}
+
+.ideate-dock > * {
+  pointer-events: auto;
+}
+
+/* ---- the lightbulb button ---- */
+.ideate-fab {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background:
+    radial-gradient(120% 120% at 30% 22%, #4f92ff 0%, var(--accent-bright) 46%, #1d4ed8 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.35) inset,
+    0 10px 24px rgba(37, 99, 235, 0.34);
+  cursor: pointer;
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s ease;
+}
+
+.ideate-fab:hover {
+  transform: translateY(-2px);
+}
+
+.ideate-fab:active {
+  transform: translateY(0) scale(0.96);
+}
+
+/* soft idle "thinking" halo to draw the eye without nagging */
+.ideate-fab-glow {
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 166, 35, 0.5) 0%, transparent 68%);
+  opacity: 0;
+  transform: scale(0.6);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.ideate-fab:hover .ideate-fab-glow {
+  opacity: 0.85;
+  transform: scale(1);
+}
+
+.ideate-fab-icon {
+  position: relative;
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: filter 0.18s ease;
+}
+
+/* when open, the bulb "switches on" — warm fill + glow */
+.ideate-fab[aria-expanded="true"] {
+  background:
+    radial-gradient(120% 120% at 30% 22%, #ffd27a 0%, var(--idea) 52%, var(--idea-deep) 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.5) inset,
+    0 0 0 4px rgba(245, 166, 35, 0.18),
+    0 10px 26px rgba(214, 133, 12, 0.42);
+}
+
+.ideate-fab[aria-expanded="true"] .ideate-fab-icon {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.75));
+}
+
+.ideate-fab[aria-expanded="true"] .ideate-fab-icon path:last-child {
+  fill: rgba(255, 255, 255, 0.32);
+}
+
+/* ---- the idea bubble ---- */
+/* Author display:grid below would otherwise beat the UA [hidden] rule, leaving
+   the bubble permanently visible — so re-assert the hide explicitly. */
+.ideate-popover[hidden] {
+  display: none;
+}
+
+.ideate-popover {
+  position: relative;
+  width: 276px;
+  display: grid;
+  gap: 12px;
+  padding: 16px 16px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px 16px 6px 16px;
+  background:
+    linear-gradient(180deg, #ffffff 0%, var(--paper) 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 22px 50px -12px rgba(23, 32, 51, 0.34);
+  transform-origin: bottom right;
+  animation: ideate-pop 0.22s cubic-bezier(0.34, 1.4, 0.5, 1);
+}
+
+@keyframes ideate-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.94);
+  }
+}
+
+/* staggered reveal of the inner pieces */
+.ideate-popover > * {
+  animation: ideate-rise 0.32s both cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+.ideate-popover > .ideate-head { animation-delay: 0.04s; }
+.ideate-popover > .ideate-input { animation-delay: 0.09s; }
+.ideate-popover > .ideate-actions { animation-delay: 0.14s; }
+
+@keyframes ideate-rise {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+}
+
+.ideate-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ideate-spark {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  color: var(--idea-deep);
+  background: rgba(245, 166, 35, 0.16);
+}
+
+.ideate-spark svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ideate-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.ideate-input {
+  width: 100%;
+  resize: vertical;
+  min-height: 70px;
+  padding: 10px 11px;
+  border: 1px solid var(--line-medium);
+  border-radius: 10px;
+  color: var(--ink);
+  background: var(--surface);
+  font-size: 12.5px;
+  line-height: 1.5;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.ideate-input::placeholder {
+  color: #9aa9bd;
+}
+
+.ideate-input:focus {
+  outline: none;
+  border-color: var(--idea);
+  box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.18);
+}
+
+.ideate-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ideate-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #9aa9bd;
+  white-space: nowrap;
+}
+
+.ideate-hint kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border: 1px solid var(--line-medium);
+  border-radius: 4px;
+  background: var(--surface);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.ideate-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 15px;
+  border: 0;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  background: linear-gradient(180deg, var(--idea) 0%, var(--idea-deep) 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 6px 16px rgba(214, 133, 12, 0.34);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.ideate-submit:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 9px 20px rgba(214, 133, 12, 0.42);
+}
+
+.ideate-submit:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.ideate-submit:disabled {
+  cursor: default;
+  filter: grayscale(0.4);
+  opacity: 0.55;
+}
+
+.ideate-submit-icon {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+}
+
 #stage {
   --pose-stroke: #7c3aed;
   --pose-soft-stroke: rgba(124, 58, 237, 0.42);
@@ -2488,6 +2802,10 @@ input:focus-visible {
     height: auto;
     min-height: calc(100vh - 28px);
     overflow: visible;
+  }
+
+  .side-panel-resizer {
+    display: none;
   }
 
   .stage-wrap {

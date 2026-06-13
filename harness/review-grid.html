@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Clip review grid</title>
+<style>
+  body { margin:0; background:#fff; font-family: ui-sans-serif, system-ui, sans-serif; color:#172033; }
+  h1 { font-size:18px; margin:12px 0 2px 12px; }
+  #root { display:flex; flex-wrap:wrap; align-items:flex-start; gap:6px; padding:8px; }
+  .pose-block { padding:4px 6px 10px; }
+  .pose-block h3 { margin:0 0 2px; font-size:14px; font-weight:600; }
+  svg.stage { width:430px; height:auto; background:#f7fbff; border:1px solid #dbe7f5; border-radius:8px; display:block; }
+  .grid-line { stroke:#e3ecf7; stroke-width:0.6; }
+  .grid-line.major { stroke:#bfd7f8; stroke-width:0.9; }
+  .grid-label { fill:#5b6b82; font-size:12px; }
+  .limb { fill: rgba(255,255,255,0.5); stroke-linejoin:round; stroke-width:2; }
+  .node { stroke:#fff; stroke-width:1; }
+</style>
+</head>
+<body>
+<h1 id="title">loading…</h1>
+<div id="root"></div>
+<script>
+// ---- geometry helpers (ported verbatim from tools/pose-grid.html) ----
+const f = (n) => Number(n.toFixed(1));
+const distance = (a,b) => Math.max(1, Math.hypot(b.x-a.x, b.y-a.y));
+const unit = (a,b) => { const l=distance(a,b); return {x:(b.x-a.x)/l, y:(b.y-a.y)/l}; };
+const addScaled = (p,v,s) => ({x:p.x+v.x*s, y:p.y+v.y*s});
+const off = (p,x,y) => ({x:p.x+x, y:p.y+y});
+const mid = (a,b) => ({x:(a.x+b.x)/2, y:(a.y+b.y)/2});
+const ptsStr = (arr) => arr.map(p=>`${f(p.x)},${f(p.y)}`).join(" ");
+function limbPolygon(s,e,sw,ew){
+  const ax=unit(s,e), n={x:-ax.y,y:ax.x}, c=mid(s,e), hd=(sw+ew)/4;
+  return ptsStr([addScaled(s,n,sw/2), addScaled(c,n,hd), addScaled(e,n,ew/2), addScaled(e,n,-ew/2), addScaled(c,n,-hd), addScaled(s,n,-sw/2)]);
+}
+function torsoPoly(p){
+  const t = { leftShoulder: off(p.leftShoulder,-13,-8), rightShoulder: off(p.rightShoulder,16,-8),
+    rightRib: off(p.chest,43,12), rightWaist: off(p.stomach,27,20), rightHip: off(p.rightHip,30,23),
+    pelvisTip: off(p.hips,0,54), leftHip: off(p.leftHip,-30,23), leftWaist: off(p.stomach,-27,20), leftRib: off(p.chest,-43,12) };
+  return ptsStr([t.leftShoulder,t.rightShoulder,t.rightRib,t.rightWaist,t.rightHip,t.pelvisTip,t.leftHip,t.leftWaist,t.leftRib]);
+}
+function neckPoly(p){ return ptsStr([off(p.neck,-15,-4),off(p.neck,15,-4),off(p.neck,12,26),off(p.neck,-12,26)]); }
+function headPoly(h){ return ptsStr([off(h,-33,-48),off(h,30,-42),off(h,42,-5),off(h,6,47),off(h,-41,10)]); }
+function handPoly(el,h){ const ax=unit(el,h), n={x:-ax.y,y:ax.x};
+  return ptsStr([addScaled(addScaled(h,ax,-12),n,10), addScaled(addScaled(h,ax,6),n,16), addScaled(addScaled(h,ax,25),n,1), addScaled(addScaled(h,ax,6),n,-16), addScaled(addScaled(h,ax,-12),n,-11)]); }
+function footPoly(kn,ft,dir){ const ax=unit(kn,ft), n={x:-ax.y,y:ax.x};
+  const fwd=unit(ft,{x:ft.x+dir*48,y:ft.y+8}), toeBase=addScaled(ft,fwd,28), toeTip=addScaled(ft,fwd,43);
+  return ptsStr([addScaled(addScaled(ft,ax,-14),n,11), addScaled(toeTip,n,5), addScaled(toeTip,n,-8), addScaled(toeBase,n,-14), addScaled(addScaled(ft,ax,-18),n,-4)]); }
+function figurePolys(p){
+  return [ limbPolygon(p.leftShoulder,p.leftElbow,24,18), limbPolygon(p.leftElbow,p.leftHand,18,13),
+    limbPolygon(p.leftHip,p.leftKnee,28,21), limbPolygon(p.leftKnee,p.leftFoot,21,15),
+    limbPolygon(p.rightShoulder,p.rightElbow,25,18), limbPolygon(p.rightHip,p.rightKnee,29,21),
+    torsoPoly(p), neckPoly(p), headPoly(p.head), limbPolygon(p.rightElbow,p.rightHand,18,13),
+    handPoly(p.leftElbow,p.leftHand), handPoly(p.rightElbow,p.rightHand), limbPolygon(p.rightKnee,p.rightFoot,21,15),
+    footPoly(p.leftKnee,p.leftFoot,-1), footPoly(p.rightKnee,p.rightFoot,1) ]; }
+const NODES = ["head","neck","chest","stomach","hips","leftShoulder","rightShoulder","leftElbow","rightElbow","leftHand","rightHand","leftHip","rightHip","leftKnee","rightKnee","leftFoot","rightFoot"];
+const EDGES = [["head","neck"],["neck","chest"],["chest","stomach"],["stomach","hips"],["neck","leftShoulder"],["neck","rightShoulder"],["leftShoulder","leftElbow"],["leftElbow","leftHand"],["rightShoulder","rightElbow"],["rightElbow","rightHand"],["hips","leftHip"],["hips","rightHip"],["leftHip","leftKnee"],["leftKnee","leftFoot"],["rightHip","rightKnee"],["rightKnee","rightFoot"]];
+function gridSvg(W,H){ let g=""; for(let x=0;x<=W;x+=50){const m=x%100===0; g+=`<line class="grid-line ${m?'major':''}" x1="${x}" y1="0" x2="${x}" y2="${H}"/>`; if(m)g+=`<text class="grid-label" x="${x+2}" y="14">${x}</text>`;} for(let y=0;y<=H;y+=50){const m=y%100===0; g+=`<line class="grid-line ${m?'major':''}" x1="0" y1="${y}" x2="${W}" y2="${y}"/>`; if(m&&y>0)g+=`<text class="grid-label" x="3" y="${y-3}">${y}</text>`;} return g; }
+function poseBlock(label, pose, color){
+  const W=900,H=720;
+  const norm = {...pose}; if(!norm.chest&&norm.stomach)norm.chest=norm.stomach; if(!norm.stomach&&norm.torso)norm.stomach=norm.torso;
+  const polys = figurePolys(norm).map(pp=>`<polygon class="limb" points="${pp}" stroke="${color}"/>`).join("");
+  const bones = EDGES.map(([a,b])=>norm[a]&&norm[b]?`<line x1="${norm[a].x}" y1="${norm[a].y}" x2="${norm[b].x}" y2="${norm[b].y}" stroke="#334155" stroke-width="1.6" stroke-linecap="round"/>`:"").join("");
+  const dots = NODES.map(k=>norm[k]?`<circle class="node" cx="${norm[k].x}" cy="${norm[k].y}" r="4" fill="#334155"/>`:"").join("");
+  return `<div class="pose-block"><h3>${label}</h3><svg class="stage" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${gridSvg(W,H)}${polys}${bones}${dots}</svg></div>`;
+}
+async function main(){
+  const params = new URLSearchParams(location.search);
+  const clipUrl = params.get("clip");
+  const color = params.get("color") || "#7c3aed";
+  const d = await (await fetch(clipUrl)).json();
+  const snap = d.snapshot || d;
+  const kf = snap.keyframes || {};
+  const order = Object.keys(kf).sort((a,b)=>Number(a)-Number(b));
+  document.getElementById("title").textContent = (d.name || clipUrl) + ` — ${order.length} keyframes`;
+  document.getElementById("root").innerHTML = order.map(k=>poseBlock(`KF ${k}`, kf[k].pose, color)).join("");
+}
+main();
+</script>
+</body>
+</html>
