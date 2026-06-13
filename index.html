@@ -7,6 +7,15 @@
     <link rel="stylesheet" href="src/styles.css" />
   </head>
   <body data-live-reload="enabled">
+    <header class="file-bar">
+      <details class="file-menu" id="fileMenu">
+        <summary class="file-menu-trigger">File</summary>
+        <div class="file-menu-panel">
+          <button id="openSaveAnimationModalButton" type="button" class="file-menu-command">Save</button>
+          <button id="openLoadAnimationModalButton" type="button" class="file-menu-command">Open</button>
+        </div>
+      </details>
+    </header>
     <main class="app-shell">
       <aside class="side-panel">
         <div class="brand-block">
@@ -14,86 +23,75 @@
           <h1>Motion Director</h1>
         </div>
 
-        <div class="mode-switch" role="tablist" aria-label="Mode">
-          <button id="layoutModeButton" type="button" class="mode-button" data-mode="layout" role="tab">Layout</button>
-          <button id="motionModeButton" type="button" class="mode-button is-active" data-mode="motion" role="tab">Motion</button>
-        </div>
-
-        <section class="control-group mode-panel" data-mode-panel="layout">
-          <h2>Layout</h2>
-          <label>
-            Character preset
-            <select id="layoutPresetSelect">
-              <option>Polyman Default</option>
-              <option>Tall Polyman</option>
-              <option>Swole Polyman</option>
-            </select>
-          </label>
-          <div class="layout-grid">
+        <section class="control-group">
+          <section id="keyframeSettingsPanel" class="settings-card keyframe-settings">
+            <h2>Keyframe settings</h2>
+            <div id="keyframeTimingControl" class="keyframe-timing-control">
+              <div class="keyframe-timing-readout">
+                <span>Hold <strong id="keyframeHoldValue">0.00s (0f)</strong></span>
+                <span>Duration <strong id="durationValue">1.08s (13f)</strong></span>
+              </div>
+              <div class="keyframe-timing-bar" aria-label="Keyframe hold and duration">
+                <span class="keyframe-hold-fill" aria-hidden="true"></span>
+                <span class="keyframe-duration-line" aria-hidden="true"></span>
+                <span class="keyframe-timing-handle keyframe-timing-handle-hold" aria-hidden="true"></span>
+                <span class="keyframe-timing-handle keyframe-timing-handle-duration" aria-hidden="true"></span>
+                <input id="keyframeHoldInput" type="range" min="0" max="96" step="1" value="0" aria-label="Hold first frame in frames" />
+                <input id="durationInput" type="range" min="0" max="96" step="1" value="13" aria-label="Duration after cel in frames" />
+              </div>
+            </div>
+            <button id="deleteKeyframeButton" type="button" class="keyframe-delete-button">Delete keyframe</button>
+          </section>
+          <section id="keyframeMotionSettingsPanel" class="settings-card keyframe-motion-settings">
+            <h2>Keyframe motion</h2>
+            <div class="timing-shape">
+              <div class="timing-label-row">
+                <span>Anticipation <strong id="anticipationValue">18%</strong></span>
+                <span>Overshoot <strong id="overshootValue">18%</strong></span>
+              </div>
+              <div class="timing-rail" id="timingRail" aria-label="Easing timing allocation">
+                <span class="timing-marker anticipation-marker" id="anticipationMarker" role="slider" tabindex="0" aria-label="Anticipation timing" aria-valuemin="0" aria-valuemax="35" aria-valuenow="18"></span>
+                <span class="timing-marker overshoot-marker" id="overshootMarker" role="slider" tabindex="0" aria-label="Overshoot timing" aria-valuemin="0" aria-valuemax="35" aria-valuenow="18"></span>
+              </div>
+            </div>
             <label>
-              Height
-              <input id="heightInput" type="range" min="85" max="120" step="1" value="100" />
+              Easing curve
+              <span id="bezierValue">cubic-bezier(.22, .02, .18, 1)</span>
             </label>
-            <label>
-              Build
-              <input id="buildInput" type="range" min="80" max="130" step="1" value="100" />
-            </label>
-            <label>
-              Legs
-              <input id="legInput" type="range" min="85" max="125" step="1" value="100" />
-            </label>
-            <label>
-              Arms
-              <input id="armInput" type="range" min="85" max="125" step="1" value="100" />
-            </label>
-          </div>
-          <div class="button-row">
-            <button id="savePresetButton" type="button" class="secondary">Save Preset</button>
-            <button id="keyPoseButton" type="button" class="secondary">Key Pose</button>
-          </div>
+            <div class="speed-graph bezier-editor" aria-label="Bezier curve editor">
+              <svg id="bezierEditor" viewBox="0 0 230 106" preserveAspectRatio="xMidYMid meet" role="img" tabindex="0">
+                <path class="speed-grid" d="M 12 12 H 218 M 12 53 H 218 M 12 94 H 218 M 12 12 V 94 M 115 12 V 94 M 218 12 V 94" />
+                <text class="speed-axis-label speed-axis-time" x="218" y="94">Time</text>
+                <text class="speed-axis-label speed-axis-progress" x="12" y="42" transform="rotate(-90 12 42)">Progress</text>
+                <line class="bezier-control-line" id="bezierControlLineA" />
+                <line class="bezier-control-line" id="bezierControlLineB" />
+                <path class="speed-graph-line" id="bezierCurveLine" d="" />
+                <circle class="bezier-endpoint" cx="12" cy="94" r="3" />
+                <circle class="bezier-endpoint" cx="218" cy="12" r="3" />
+                <circle class="bezier-handle" id="bezierHandleA" data-bezier-handle="a" r="4.5" tabindex="0" role="slider" aria-label="Bezier handle one" />
+                <circle class="bezier-handle" id="bezierHandleB" data-bezier-handle="b" r="4.5" tabindex="0" role="slider" aria-label="Bezier handle two" />
+              </svg>
+            </div>
+          </section>
+          <section id="arcSettingsPanel" class="settings-card arc-settings" hidden>
+            <h2>Arc settings</h2>
+            <div id="arcTimingControl" class="arc-timing-control" hidden>
+              <div class="arc-timing-readout">
+                <span>Delay <strong id="motionPathDelayFrames">0f</strong></span>
+                <span>Duration <strong id="arcDurationValue">1.1s (12f)</strong></span>
+              </div>
+              <div class="arc-timing-bar" aria-label="Arc timing window">
+                <span class="arc-timing-fill" aria-hidden="true"></span>
+                <span id="arcTimingDelayHandle" class="arc-timing-handle arc-timing-handle-delay" role="slider" tabindex="0" aria-label="Path delay" aria-valuemin="0" aria-valuemax="11" aria-valuenow="0"></span>
+                <span id="arcTimingEndHandle" class="arc-timing-handle arc-timing-handle-end" role="slider" tabindex="0" aria-label="Arc end" aria-valuemin="1" aria-valuemax="12" aria-valuenow="12"></span>
+                <input id="motionPathDelayInput" type="range" min="0" max="11" step="1" value="0" aria-label="Path delay in frames" />
+                <input id="arcDurationInput" type="range" min="1" max="12" step="1" value="12" aria-label="Arc duration in frames" />
+              </div>
+            </div>
+          </section>
         </section>
 
-        <section class="control-group mode-panel is-active" data-mode-panel="motion">
-          <h2>Motion</h2>
-          <label>
-            Easing curve
-            <span id="bezierValue">cubic-bezier(.22, .02, .18, 1)</span>
-          </label>
-          <div class="speed-graph bezier-editor" aria-label="Bezier curve editor">
-            <svg id="bezierEditor" viewBox="0 0 180 72" role="img" tabindex="0">
-              <path class="speed-grid" d="M 12 12 H 168 M 12 36 H 168 M 12 60 H 168 M 12 12 V 60 M 90 12 V 60 M 168 12 V 60" />
-              <line class="bezier-control-line" id="bezierControlLineA" />
-              <line class="bezier-control-line" id="bezierControlLineB" />
-              <path class="speed-graph-line" id="bezierCurveLine" d="" />
-              <circle class="bezier-endpoint" cx="12" cy="60" r="3" />
-              <circle class="bezier-endpoint" cx="168" cy="12" r="3" />
-              <circle class="bezier-handle" id="bezierHandleA" data-bezier-handle="a" r="6" tabindex="0" role="slider" aria-label="Bezier handle one" />
-              <circle class="bezier-handle" id="bezierHandleB" data-bezier-handle="b" r="6" tabindex="0" role="slider" aria-label="Bezier handle two" />
-            </svg>
-            <div class="speed-labels">
-              <span>Time</span>
-              <span>Progress</span>
-            </div>
-          </div>
-          <div class="timing-shape">
-            <div class="timing-label-row">
-              <span>Anticipation <strong id="anticipationValue">18%</strong></span>
-              <span>Overshoot <strong id="overshootValue">18%</strong></span>
-            </div>
-            <div class="timing-rail" id="timingRail" aria-label="Easing timing allocation">
-              <span class="timing-marker anticipation-marker" id="anticipationMarker" role="slider" tabindex="0" aria-label="Anticipation timing" aria-valuemin="0" aria-valuemax="35" aria-valuenow="18"></span>
-              <span class="timing-marker overshoot-marker" id="overshootMarker" role="slider" tabindex="0" aria-label="Overshoot timing" aria-valuemin="0" aria-valuemax="35" aria-valuenow="18"></span>
-            </div>
-            <p class="timing-note">Diamonds mark action start/end. Red arc tips are extremes.</p>
-          </div>
-          <label>
-            Duration
-            <input id="durationInput" type="range" min="400" max="2400" step="100" value="1100" />
-            <span id="durationValue">1.1s</span>
-          </label>
-        </section>
-
-        <section class="state-readout">
+        <section class="state-readout" hidden>
           <h2>State</h2>
           <pre id="stateReadout"></pre>
         </section>
@@ -106,9 +104,10 @@
             <button id="panButton" type="button" class="toolbar-icon-button" aria-pressed="false" aria-label="Pan frame" title="Pan frame">Pan</button>
             <label class="zoom-toggle">
               <span>Zoom</span>
-              <input id="zoomInput" type="range" min="75" max="140" step="5" value="90" aria-label="Stage zoom" />
+              <input id="zoomInput" type="range" min="45" max="140" step="5" value="70" aria-label="Stage zoom" />
             </label>
-            <button id="resetAllButton" type="button" class="toolbar-button">Reset all</button>
+            <button id="resetPoseButton" type="button" class="toolbar-button">Reset pose</button>
+            <button id="clearMotionButton" type="button" class="toolbar-button">Clear motion</button>
             <label class="toolbar-toggle fps-toggle">
               <span>FPS</span>
               <select id="frameRateSelect" aria-label="Frame rate">
@@ -119,15 +118,47 @@
               </select>
             </label>
             <label class="character-toggle">
-              <span>Base</span>
-              <select id="characterSelect" aria-label="Base character">
-                <option value="animeHuman" selected>Polyman</option>
-                <option value="mvp">MVP</option>
-              </select>
+              <span>Figure</span>
+              <span class="figure-menu">
+                <select id="characterSelect" aria-label="Figure">
+                  <option value="animeHuman" selected>Polyman</option>
+                  <option value="stickman">Stickman</option>
+                </select>
+                <button id="newBaseButton" type="button" class="toolbar-button">New</button>
+              </span>
             </label>
           </div>
         </div>
         <div class="stage-viewport">
+          <div class="canvas-tool-palette" id="canvasToolPalette" role="toolbar" aria-label="Canvas tools">
+            <button id="motionModeButton" type="button" class="canvas-tool-button is-active" data-mode="motion" aria-label="Motion tool" title="Motion tool (M)">
+              <svg class="canvas-tool-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4 16.5c4.7-6.2 9.2-7.7 14.5-5.7" />
+                <path d="m15.2 6.8 4.4 4.2-5.8 1.2" />
+              </svg>
+              <span class="canvas-tool-copy">
+                <span class="canvas-tool-name">Motion</span>
+                <kbd>M</kbd>
+              </span>
+            </button>
+            <button id="layoutModeButton" type="button" class="canvas-tool-button" data-mode="layout" aria-label="Layout tool" title="Layout tool (L)">
+              <svg class="canvas-tool-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="m12 3 6.2 6.2-3.9 10.3L12 21l-2.3-1.5L5.8 9.2 12 3z" />
+                <path d="M12 3v8" />
+                <path d="M9.8 18.5h4.4" />
+                <circle cx="12" cy="11" r="1.6" />
+              </svg>
+              <span class="canvas-tool-copy">
+                <span class="canvas-tool-name">Layout</span>
+                <kbd>L</kbd>
+              </span>
+            </button>
+            <button id="toolPaletteToggle" type="button" class="canvas-tool-collapse" aria-label="Collapse tool labels" title="Collapse tools">
+              <span aria-hidden="true">‹</span>
+            </button>
+          </div>
+          <div class="pose-source-badge" id="poseSourceBadge" hidden>Computed</div>
+          <div class="draw-over-hint" id="drawOverHint" aria-hidden="true">Press <kbd>D</kbd> to Drawover</div>
           <div class="camera-frame-badge" id="cameraFrameBadge" hidden>
             <span class="camera-frame-icon" aria-hidden="true">▣</span>
             <button id="panDoneButton" type="button" class="camera-done-button" aria-label="Finish panning" title="Done panning">✓</button>
@@ -135,26 +166,114 @@
           <svg id="stage" viewBox="0 0 900 640" role="img" aria-label="SVG mannequin animation stage">
             <rect class="stage-bg" x="0" y="0" width="900" height="640" />
             <g id="ghostLayer"></g>
-            <g id="pathLayer"></g>
-            <line id="motionGuideLine" class="motion-guide-line" x1="0" y1="0" x2="0" y2="0" />
             <g id="puppet"></g>
             <g id="nodeLayer"></g>
+            <rect class="motion-draw-veil" x="0" y="0" width="900" height="640" />
+            <g id="pathLayer"></g>
+            <g id="shotCropMarks" class="shot-crop-marks" aria-hidden="true"></g>
+            <line id="motionGuideLine" class="motion-guide-line" x1="0" y1="0" x2="0" y2="0" />
           </svg>
         </div>
         <div class="timeline-panel">
           <div class="timeline-header">
-            <button id="playButton" type="button" class="play-toggle" aria-label="Play animation" title="Play">
-              <span class="play-icon" aria-hidden="true"></span>
-            </button>
-            <div class="timeline-copy">
-              <strong id="frameLabel">Frame 01 / 12</strong>
-              <span id="timelineHint">Draw a path, then play or scrub the timing.</span>
+            <div class="timeline-toolbar" aria-label="Playback controls">
+              <button id="playButton" type="button" class="play-toggle" aria-label="Play animation" title="Play">
+                <span class="play-icon" aria-hidden="true"></span>
+              </button>
+              <button id="reverseButton" type="button" class="playback-option" aria-pressed="false" aria-label="Ping-pong playback" title="Ping-pong">
+                <svg viewBox="0 0 18 18" aria-hidden="true">
+                  <path d="M4 6h8.2" />
+                  <path d="m10.5 3.8 2.2 2.2-2.2 2.2" />
+                  <path d="M14 12H5.8" />
+                  <path d="m7.5 9.8-2.2 2.2 2.2 2.2" />
+                </svg>
+              </button>
+              <button id="loopButton" type="button" class="playback-option" aria-pressed="false" aria-label="Loop playback" title="Loop">
+                <svg viewBox="0 0 18 18" aria-hidden="true">
+                  <path d="M5.4 6.2h5.3c2 0 3.4 1.1 3.4 2.8 0 1.7-1.4 2.8-3.4 2.8H9.2" />
+                  <path d="m10.6 9.8-2.1 2 2.1 2" />
+                  <path d="M12.6 6.2 14.7 4l-2.1-2" />
+                  <path d="M12.9 6.2H7.3C5.3 6.2 4 7.3 4 9" />
+                </svg>
+              </button>
             </div>
           </div>
-          <div class="timeline-track" id="timelineTrack" aria-label="Animation timeline"></div>
+          <div class="timeline-track" id="timelineTrack" aria-label="Animation cel timeline"></div>
         </div>
       </section>
     </main>
+
+    <dialog id="saveAnimationModal" class="modal-shell file-modal" aria-labelledby="saveAnimationTitle">
+      <form id="saveAnimationForm" method="dialog" class="modal-panel">
+        <div class="modal-header">
+          <h2 id="saveAnimationTitle">Save Animation</h2>
+          <button id="closeSaveAnimationButton" type="button" class="modal-close" aria-label="Close">×</button>
+        </div>
+        <label>
+          Name
+          <input id="animationNameInput" type="text" placeholder="Demo animation" aria-label="Animation name" />
+        </label>
+        <p id="saveAnimationStatus" class="file-modal-status" aria-live="polite"></p>
+        <div class="button-row">
+          <button id="cancelSaveAnimationButton" type="button" class="secondary">Cancel</button>
+          <button id="saveAnimationButton" type="submit">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="loadAnimationModal" class="modal-shell file-modal" aria-labelledby="loadAnimationTitle">
+      <form id="loadAnimationForm" method="dialog" class="modal-panel">
+        <div class="modal-header">
+          <h2 id="loadAnimationTitle">Open Animation</h2>
+          <button id="closeLoadAnimationButton" type="button" class="modal-close" aria-label="Close">×</button>
+        </div>
+        <label>
+          File
+          <input id="animationFileInput" type="file" accept=".motion.json,application/json" aria-label="Animation file" />
+        </label>
+        <p id="loadAnimationStatus" class="file-modal-status" aria-live="polite"></p>
+        <div class="button-row">
+          <button id="cancelLoadAnimationButton" type="button" class="secondary">Cancel</button>
+          <button id="loadAnimationButton" type="submit">Open</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="newBaseModal" class="modal-shell" aria-labelledby="newBaseTitle">
+      <form id="newBaseForm" method="dialog" class="modal-panel">
+        <div class="modal-header">
+          <h2 id="newBaseTitle">New Figure</h2>
+          <button id="closeNewBaseButton" type="button" class="modal-close" aria-label="Close">×</button>
+        </div>
+        <svg id="newFigurePreview" class="figure-preview" viewBox="0 0 180 220" role="img" aria-label="New figure preview"></svg>
+        <label>
+          Name
+          <input id="newBaseNameInput" type="text" value="New model" />
+        </label>
+        <div class="layout-grid">
+          <label>
+            Height
+            <input id="newBaseHeightInput" type="range" min="55" max="155" step="1" value="100" />
+          </label>
+          <label>
+            Build
+            <input id="newBaseBuildInput" type="range" min="55" max="175" step="1" value="100" />
+          </label>
+          <label>
+            Legs
+            <input id="newBaseLegInput" type="range" min="45" max="190" step="1" value="100" />
+          </label>
+          <label>
+            Arms
+            <input id="newBaseArmInput" type="range" min="45" max="190" step="1" value="100" />
+          </label>
+        </div>
+        <div class="button-row">
+          <button id="cancelNewBaseButton" type="button" class="secondary">Cancel</button>
+          <button id="createNewBaseButton" type="submit">Create</button>
+        </div>
+      </form>
+    </dialog>
 
     <script type="module" src="src/app.js"></script>
     <script>

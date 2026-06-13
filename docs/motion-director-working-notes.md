@@ -15,7 +15,7 @@ Last updated: 2026-06-12
 - Motion arc data persists in browser storage.
 - Motion arcs are now stored per vertex/node as path stacks; the newest path for each node is active for playback, while older stored paths remain visible as reference lines.
 - Timeline is bottom-mounted and plays one held frame at a time.
-- Timeline thumbnails preview actual sampled poses.
+- Timeline cels are text-first; they do not show mannequin thumbnails because the labels and authorship/state markers are more useful at small sizes.
 - Spacebar toggles playback.
 - FPS and base character controls live in the top-right toolbar for now, but should likely move into a settings modal later.
 - Pan and zoom framing controls also live as small upper-right toolbar controls; pan is a temporary frame mode with an in-canvas camera badge and checkmark, or Enter to commit.
@@ -29,6 +29,21 @@ Last updated: 2026-06-12
 - Layout mode can save simple character presets and mark keyed poses in the timeline.
 - Current limb polygon edits are preset-level handle values; a future step should let these polygon values be keyed over time per frame.
 
+## Timeline And Authorship Vocabulary
+
+- Cel: any displayed frame in the animation timeline. Cel labels use the `1`, `1a`, `1b`, `2` convention.
+- Anchor keyframe: a structural timeline point that starts a span of in-betweens and owns the duration until the next anchor. This is a timing/layout concept.
+- Directed pose: any anchor keyframe pose that the director authored, accepted, or promoted into the timeline. It is shown in purple.
+- Computed pose: any in-between pose produced by interpolation, motion paths, or body-response solving. It is shown in blue.
+- Keyframe and directed now mean the same thing in the UI model:
+  - Every anchor keyframe is directed, even if its starting pose was computed from previous motion paths.
+  - Creating a keyframe accepts the incoming resting pose from previous arcs as a fresh human layout.
+  - In-betweens are always computed. If an in-between matters enough to override, it should become a keyframe rather than storing per-inbetween authorship.
+- The timeline should communicate keyframe status with taller purple cels and larger frame numbers. Computed in-betweens should stay quiet by default.
+- The canvas badge should show the current cel label plus `Directed` or `Computed` in the matching color in both Layout and Motion modes.
+- Directed keyframe edits should reshape the computation by creating or updating director-editable arcs, rather than existing as a separate override layer.
+- Layout changes on an anchor keyframe can generate director-editable red arcs retroactively from the previous anchor into the edited pose. For now, these generated arcs update themselves while the pose is being edited and avoid overwriting an existing hand-drawn/director arc in the same segment.
+
 ## Timing Model
 
 - Anticipation and overshoot are path-boundary concepts, not beginner-friendly auto-polish.
@@ -39,6 +54,8 @@ Last updated: 2026-06-12
 - Anticipation and overshoot phases get cushioned frame windows so they do not snap.
 - The main action spacing is controlled by a directly editable cubic-bezier curve.
 - Export/readout stores the timing as `easing: "cubic-bezier"` and includes `easingBezier`.
+- Each anchor keyframe can also have a hold length. The hold keeps the outgoing pose still for a frame-stepped interval before motion arcs and computed interpolation begin inside that anchor's duration.
+- Timeline cels include a bottom timing rail: keyframes get a purple tick, hold cels get a gray segment, and active motion cels get a red segment.
 
 ## Connected Motion
 
