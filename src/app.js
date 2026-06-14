@@ -327,6 +327,16 @@ const ideateToggle = document.querySelector("#ideateToggle");
 const ideatePopover = document.querySelector("#ideatePopover");
 const ideateInput = document.querySelector("#ideateInput");
 const ideateSubmit = document.querySelector("#ideateSubmit");
+const ideateStatus = document.querySelector("#ideateStatus");
+
+// Sketch generation calls the model through the dev server's /api/generate proxy,
+// which holds the API key. The hosted (GitHub Pages) build has no backend, so the
+// button is gated off there — it keeps our API tokens from being spent by visitors.
+const isLocalDev = ["localhost", "127.0.0.1", ""].includes(location.hostname);
+
+// The generate dock only works with a local dev-server proxy + API key, so it's
+// hidden by default (kept off the public link) and revealed only on localhost.
+if (isLocalDev) ideateDock?.removeAttribute("hidden");
 const fileMenu = document.querySelector("#fileMenu");
 const openSaveAnimationModalButton = document.querySelector("#openSaveAnimationModalButton");
 const openLoadAnimationModalButton = document.querySelector("#openLoadAnimationModalButton");
@@ -342,6 +352,11 @@ const animationFileInput = document.querySelector("#animationFileInput");
 const closeLoadAnimationButton = document.querySelector("#closeLoadAnimationButton");
 const cancelLoadAnimationButton = document.querySelector("#cancelLoadAnimationButton");
 const loadAnimationButton = document.querySelector("#loadAnimationButton");
+const openDemoDocsModalButton = document.querySelector("#openDemoDocsModalButton");
+const demoDocsModal = document.querySelector("#demoDocsModal");
+const closeDemoDocsButton = document.querySelector("#closeDemoDocsButton");
+const cancelDemoDocsButton = document.querySelector("#cancelDemoDocsButton");
+const presetButtons = document.querySelectorAll("[data-preset]");
 const saveAnimationStatus = document.querySelector("#saveAnimationStatus");
 const loadAnimationStatus = document.querySelector("#loadAnimationStatus");
 const motionDrawVeil = document.querySelector(".motion-draw-veil");
@@ -1961,6 +1976,20 @@ function saveNamedAnimation() {
   if (saveAnimationModal) saveAnimationModal.close();
 }
 
+function applyAnimationPayload(payload, fallbackName) {
+  const snapshot = payload?.snapshot ?? payload;
+  if (!snapshot || typeof snapshot !== "object") {
+    setLoadAnimationStatus("That file does not look like a Motion Director animation.");
+    return false;
+  }
+  recordHistory();
+  restoreSnapshot(snapshot);
+  if (animationNameInput && payload?.name) animationNameInput.value = payload.name;
+  setLoadAnimationStatus(`Opened "${payload?.name ?? fallbackName}".`);
+  if (loadAnimationModal) loadAnimationModal.close();
+  return true;
+}
+
 async function loadNamedAnimation() {
   const file = animationFileInput?.files?.[0];
   if (!file) {
@@ -1969,18 +1998,21 @@ async function loadNamedAnimation() {
   }
   try {
     const payload = JSON.parse(await file.text());
-    const snapshot = payload?.snapshot ?? payload;
-    if (!snapshot || typeof snapshot !== "object") {
-      setLoadAnimationStatus("That file does not look like a Motion Director animation.");
-      return;
-    }
-    recordHistory();
-    restoreSnapshot(snapshot);
-    if (animationNameInput && payload?.name) animationNameInput.value = payload.name;
-    setLoadAnimationStatus(`Opened "${payload?.name ?? file.name}".`);
-    if (loadAnimationModal) loadAnimationModal.close();
+    applyAnimationPayload(payload, file.name);
   } catch {
     setLoadAnimationStatus("Could not open that file.");
+  }
+}
+
+async function loadPresetAnimation(url) {
+  setLoadAnimationStatus("Loading preset…");
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    applyAnimationPayload(payload, url.split("/").pop());
+  } catch {
+    setLoadAnimationStatus("Could not load that preset.");
   }
 }
 
@@ -4960,6 +4992,23 @@ animationFileInput?.addEventListener("change", () => {
   setLoadAnimationStatus(animationFileInput.files?.[0]?.name ?? "");
 });
 
+presetButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const url = button.getAttribute("data-preset");
+    if (url) loadPresetAnimation(url);
+  });
+});
+
+function openDemoDocsModal() {
+  if (!demoDocsModal) return;
+  if (fileMenu) fileMenu.open = false;
+  demoDocsModal.showModal();
+}
+
+openDemoDocsModalButton?.addEventListener("click", openDemoDocsModal);
+closeDemoDocsButton?.addEventListener("click", () => demoDocsModal?.close());
+cancelDemoDocsButton?.addEventListener("click", () => demoDocsModal?.close());
+
 timelineTrack.addEventListener("wheel", (event) => {
   if (!event.ctrlKey && !event.metaKey && !event.altKey) return;
   event.preventDefault();
@@ -5154,15 +5203,61 @@ function setIdeateOpen(open) {
   if (open) ideateInput?.focus();
 }
 
-// AI hook: this is where the prompt gets wired up to the model. For now it just
-// surfaces the idea text; replace the body with the real ideate call.
-function runIdeate(idea) {
+function setIdeateStatus(message) {
+  if (ideateStatus) ideateStatus.textContent = message;
+}
+
+// Drop a generated pose onto the current keyframe and show it on the puppet.
+function applyGeneratedPose(pose) {
+  const nextPose = normalizeTorsoNodes({
+    ...structuredClone(state.base),
+    ...structuredClone(pose),
+  });
+  recordHistory();
+  state.pose = nextPose;
+  const anchor = state.keyframes[state.selectedAnchorIndex];
+  if (anchor) anchor.pose = structuredClone(nextPose);
+  render();
+}
+
+let isGenerating = false;
+
+// AI hook: sends the idea to the dev-server proxy (which calls Claude) and applies
+// the returned pose. Generation runs locally only — see isLocalDev above.
+async function runIdeate(idea) {
   const text = idea.trim();
   if (!text) {
     ideateInput?.focus();
     return;
   }
-  console.log("[ideate] prompt:", text);
+  if (!isLocalDev) {
+    setIdeateStatus("Sketch generation runs locally only — clone the repo and run `npm run dev`.");
+    return;
+  }
+  if (isGenerating) return;
+
+  isGenerating = true;
+  if (ideateSubmit) ideateSubmit.disabled = true;
+  setIdeateStatus("Sketching…");
+  try {
+    const response = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idea: text, base: state.base }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setIdeateStatus(payload.error ?? "Could not generate a sketch.");
+      return;
+    }
+    applyGeneratedPose(payload.pose);
+    setIdeateStatus("Sketch applied to the current keyframe.");
+  } catch {
+    setIdeateStatus("Could not reach the dev server.");
+  } finally {
+    isGenerating = false;
+    if (ideateSubmit) ideateSubmit.disabled = false;
+  }
 }
 
 if (ideateToggle && ideatePopover) {

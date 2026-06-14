@@ -15,6 +15,7 @@
           <button id="openLoadAnimationModalButton" type="button" class="file-menu-command">Open</button>
         </div>
       </details>
+      <button id="openDemoDocsModalButton" type="button" class="file-bar-button">Demo docs</button>
     </header>
     <main class="app-shell">
       <aside class="side-panel">
@@ -183,7 +184,7 @@
             <g id="shotCropMarks" class="shot-crop-marks" aria-hidden="true"></g>
             <line id="motionGuideLine" class="motion-guide-line" x1="0" y1="0" x2="0" y2="0" />
           </svg>
-          <div class="ideate-dock" id="ideateDock">
+          <div class="ideate-dock" id="ideateDock" hidden>
             <div class="ideate-popover" id="ideatePopover" role="dialog" aria-label="Describe an idea" hidden>
               <div class="ideate-head">
                 <span class="ideate-spark" aria-hidden="true">
@@ -210,6 +211,7 @@
                   Suggest sketch
                 </button>
               </div>
+              <p id="ideateStatus" class="ideate-status" aria-live="polite"></p>
             </div>
             <button
               id="ideateToggle"
@@ -281,6 +283,10 @@
           <h2 id="loadAnimationTitle">Open Animation</h2>
           <button id="closeLoadAnimationButton" type="button" class="modal-close" aria-label="Close">×</button>
         </div>
+        <div class="file-modal-presets" role="group" aria-label="Presets">
+          <span class="file-modal-presets-label">Presets</span>
+          <button id="loadShoulderWavePresetButton" type="button" class="secondary file-modal-preset" data-preset="demos/shoulder-wave.motion.json">Shoulder wave</button>
+        </div>
         <label>
           File
           <input id="animationFileInput" type="file" accept=".motion.json,application/json" aria-label="Animation file" />
@@ -291,6 +297,24 @@
           <button id="loadAnimationButton" type="submit">Open</button>
         </div>
       </form>
+    </dialog>
+
+    <dialog id="demoDocsModal" class="modal-shell file-modal" aria-labelledby="demoDocsTitle">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <h2 id="demoDocsTitle">Demo docs</h2>
+          <button id="closeDemoDocsButton" type="button" class="modal-close" aria-label="Close">×</button>
+        </div>
+        <p class="file-modal-status">Self-contained playback of the generate → critique → refine loop. Opens in a new tab.</p>
+        <ul class="demo-doc-list">
+          <li><a class="demo-doc-link" href="demos/anxious-jump.html" target="_blank" rel="noopener">Anxious jump — frame sequence + playback</a></li>
+          <li><a class="demo-doc-link" href="demos/anxious-jump-before.html" target="_blank" rel="noopener">Anxious jump — before the learning loop</a></li>
+          <li><a class="demo-doc-link" href="demos/anxious-jump-after.html" target="_blank" rel="noopener">Anxious jump — after the learning loop</a></li>
+        </ul>
+        <div class="button-row">
+          <button id="cancelDemoDocsButton" type="button" class="secondary">Close</button>
+        </div>
+      </div>
     </dialog>
 
     <dialog id="newBaseModal" class="modal-shell" aria-labelledby="newBaseTitle">
