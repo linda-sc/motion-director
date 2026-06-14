@@ -334,9 +334,16 @@ const ideateStatus = document.querySelector("#ideateStatus");
 // button is gated off there — it keeps our API tokens from being spent by visitors.
 const isLocalDev = ["localhost", "127.0.0.1", ""].includes(location.hostname);
 
-// The generate dock only works with a local dev-server proxy + API key, so it's
-// hidden by default (kept off the public link) and revealed only on localhost.
-if (isLocalDev) ideateDock?.removeAttribute("hidden");
+// Public sketch generation goes through a rate-limited Cloudflare Worker that
+// holds the API key (see worker/). Paste your deployed Worker URL here to turn
+// the button on for the live site; leave blank to keep generation local-only.
+const GENERATE_PROXY_URL = "https://motiondirector-generate.lindachenny.workers.dev";
+
+// Local dev hits the dev-server proxy; prod hits the Worker (when configured).
+const generateEndpoint = isLocalDev ? "/api/generate" : GENERATE_PROXY_URL;
+
+// Show the generate dock only where it can actually reach a proxy.
+if (generateEndpoint) ideateDock?.removeAttribute("hidden");
 const fileMenu = document.querySelector("#fileMenu");
 const openSaveAnimationModalButton = document.querySelector("#openSaveAnimationModalButton");
 const openLoadAnimationModalButton = document.querySelector("#openLoadAnimationModalButton");
@@ -5230,8 +5237,8 @@ async function runIdeate(idea) {
     ideateInput?.focus();
     return;
   }
-  if (!isLocalDev) {
-    setIdeateStatus("Sketch generation runs locally only — clone the repo and run `npm run dev`.");
+  if (!generateEndpoint) {
+    setIdeateStatus("Sketch generation isn't available here.");
     return;
   }
   if (isGenerating) return;
@@ -5240,7 +5247,7 @@ async function runIdeate(idea) {
   if (ideateSubmit) ideateSubmit.disabled = true;
   setIdeateStatus("Sketching…");
   try {
-    const response = await fetch("/api/generate", {
+    const response = await fetch(generateEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ idea: text, base: state.base }),

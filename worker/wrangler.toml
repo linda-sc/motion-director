@@ -1,0 +1,10 @@
+name = "motiondirector-generate"
+main = "generate.js"
+compatibility_date = "2024-11-01"
+
+# KV namespace for rate-limit + daily-cap counters.
+# Create it with:  wrangler kv namespace create LIMITS
+# then paste the returned id below.
+[[kv_namespaces]]
+binding = "LIMITS"
+id = "1f8ca8799ca242f5adf26db082616a63"
